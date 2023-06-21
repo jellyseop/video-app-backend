@@ -1,2 +1,2 @@
-# youtube-clone
-youtube-clone with nodeJS
+# basic crud backend using Express, mongoDB
+
