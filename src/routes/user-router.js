@@ -4,6 +4,8 @@ import userController from "../controllers/user-controller";
 
 const router = express.Router();
 
+router.post("/logout", userController.logoutUser);
+
 router.get("/:id", userController.getUserById);
 
 // PUT /users/:id

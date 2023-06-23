@@ -24,6 +24,19 @@ const login = async (req, res) => {
     res.status(500).json({ error: "Failed to login" });
   }
 };
+
+// User logout
+const logoutUser = (req, res) => {
+  // Destroy the session and clear the user ID
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Failed to logout" });
+    }
+    res.clearCookie("connect.sid"); // Clear the session cookie
+    res.json({ message: "Logout successful" });
+  });
+};
+
 // Create a new user
 const createUser = async (req, res) => {
   try {
@@ -85,6 +98,7 @@ const deleteUser = async (req, res) => {
 
 export default {
   login,
+  logoutUser,
   createUser,
   getUserById,
   updateUser,
