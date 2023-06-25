@@ -10,12 +10,16 @@ export const login = async (req, res) => {
       return res.status(401).json({ ok: false, error: "Invalid email" });
     }
 
-    const ok = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (!ok) {
+    if (!isPasswordValid) {
       return res.status(401).json({ ok: false, error: "Invalid password" });
     }
-    // Implement session or token generation here
+
+    console.log("typeof user :>> ", typeof user);
+    delete user.password;
+    console.log("user :>> ", user);
+
     req.session.loggedIn = true;
     req.session.user = user;
 
@@ -92,6 +96,45 @@ export const updateUser = async (req, res) => {
     // Handle any errors that occur during the update process
     console.error("Error during user update:", error);
     res.status(500).json({ message: "An error occurred during user update." });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const {
+      session: {
+        user: { _id },
+      },
+      body: { newPassword },
+    } = req;
+
+    // Retrieve the user from the database
+    const user = await User.findById(_id);
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+    /*
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid current password." });
+    }
+    */
+
+    // Update the user's password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: "Password updated successfully." });
+
+    //2. update password
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while changing the password." });
   }
 };
 
