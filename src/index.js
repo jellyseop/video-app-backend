@@ -7,10 +7,13 @@ import connectDB from "../config/database";
 import rootRouter from "./routes/root-router";
 import userRouter from "./routes/user-router";
 import videoRouter from "./routes/video-router";
+import morgan from "morgan";
 
 const app = express();
+const logger = morgan("dev");
 connectDB();
 
+app.use(logger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

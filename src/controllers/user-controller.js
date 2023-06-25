@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 
 // User login
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
@@ -26,7 +26,7 @@ const login = async (req, res) => {
 };
 
 // User logout
-const logoutUser = (req, res) => {
+export const logoutUser = (req, res) => {
   // Destroy the session and clear the user ID
   req.session.destroy((err) => {
     if (err) {
@@ -38,7 +38,7 @@ const logoutUser = (req, res) => {
 };
 
 // Create a new user
-const createUser = async (req, res) => {
+export const createUser = async (req, res) => {
   try {
     const { email, username, password } = req.body;
 
@@ -50,7 +50,7 @@ const createUser = async (req, res) => {
 };
 
 // Get a user by ID
-const getUserById = async (req, res) => {
+export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findById(id);
@@ -64,26 +64,39 @@ const getUserById = async (req, res) => {
 };
 
 // Update a user
-const updateUser = async (req, res) => {
+export const updateUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { email, username, password } = req.body;
+    const {
+      body: { username, email },
+      session: {
+        user: { _id },
+      },
+    } = req;
+
+    // Update the user in the database
     const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { email, username, password },
+      _id,
+      { email, username },
       { new: true }
     );
+
+    // If the user does not exist, return an error
     if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ message: "User not found." });
     }
-    res.status(200).json(updatedUser);
+
+    req.session.user = updatedUser;
+    // Return the updated user as a response
+    res.status(200).json({ user: updatedUser });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update user" });
+    // Handle any errors that occur during the update process
+    console.error("Error during user update:", error);
+    res.status(500).json({ message: "An error occurred during user update." });
   }
 };
 
 // Delete a user
-const deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedUser = await User.findByIdAndDelete(id);
@@ -94,13 +107,4 @@ const deleteUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to delete user" });
   }
-};
-
-export default {
-  login,
-  logoutUser,
-  createUser,
-  getUserById,
-  updateUser,
-  deleteUser,
 };
