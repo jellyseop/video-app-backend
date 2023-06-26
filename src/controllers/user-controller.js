@@ -1,4 +1,3 @@
-import session from "express-session";
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 
@@ -17,8 +16,6 @@ export const login = async (req, res) => {
       return res.status(401).json({ ok: false, error: "Invalid password" });
     }
 
-    console.log("typeof user :>> ", typeof user);
-    delete user.password;
     console.log("user :>> ", user);
 
     req.session.loggedIn = true;
@@ -81,11 +78,13 @@ export const updateUser = async (req, res) => {
   try {
     const {
       body: { username, email },
+      file,
       session: {
-        user: { _id },
+        user: { _id, profileImageUrl },
       },
     } = req;
 
+    console.log("file :>> ", profileImageUrl);
     const foundUser = await User.findOne({
       $or: [{ email }, { username }],
       _id: { $ne: _id },
@@ -99,7 +98,7 @@ export const updateUser = async (req, res) => {
     // Update the user in the database
     const updatedUser = await User.findByIdAndUpdate(
       _id,
-      { email, username },
+      { email, username, profileImageUrl: file ? file.path : profileImageUrl },
       { new: true }
     );
 
@@ -110,7 +109,7 @@ export const updateUser = async (req, res) => {
 
     req.session.user = updatedUser;
     // Return the updated user as a response
-    res.status(200).json({ user: updatedUser });
+    res.status(200).json({ message: "profile updated successfully." });
   } catch (error) {
     // Handle any errors that occur during the update process
     console.error("Error during user update:", error);

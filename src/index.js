@@ -34,6 +34,7 @@ app.use(
 app.use("/", rootRouter);
 app.use("/videos", videoRouter);
 app.use("/users", userRouter);
+app.use("/uploads", express.static("uploads"));
 
 const port = 3000; // Choose your desired port number
 app.listen(port, () => {

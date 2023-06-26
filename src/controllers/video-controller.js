@@ -1,17 +1,30 @@
 import Video from "../models/Video.js";
 
 // Create a new video
-const createVideo = async (req, res) => {
+export const createVideo = async (req, res) => {
   try {
-    const { title, description, url } = req.body;
-    const newVideo = await Video.create({ title, description, url });
+    const {
+      body: { title, description, hashtags },
+      file: { path },
+      session: { user },
+    } = req;
+    console.log("file :>> ", path);
+
+    const newVideo = await Video.create({
+      title,
+      description,
+      videoUrl: path,
+      hashtags,
+      user,
+    });
     res.status(201).json(newVideo);
   } catch (error) {
+    console.log("error :>> ", error);
     res.status(500).json({ error: "Failed to create video" });
   }
 };
 
-const searchVideos = async (req, res) => {
+export const searchVideos = async (req, res) => {
   try {
     const { query } = req.query;
     const videos = await Video.find({
@@ -27,7 +40,7 @@ const searchVideos = async (req, res) => {
 };
 
 // Get a video by ID
-const getVideoById = async (req, res) => {
+export const getVideoById = async (req, res) => {
   try {
     const { id } = req.params;
     const video = await Video.findById(id);
@@ -41,7 +54,7 @@ const getVideoById = async (req, res) => {
 };
 
 // Update a video
-const updateVideo = async (req, res) => {
+export const updateVideo = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, url } = req.body;
@@ -60,7 +73,7 @@ const updateVideo = async (req, res) => {
 };
 
 // Delete a video
-const deleteVideo = async (req, res) => {
+export const deleteVideo = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedVideo = await Video.findByIdAndDelete(id);
@@ -71,12 +84,4 @@ const deleteVideo = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to delete video" });
   }
-};
-
-export default {
-  searchVideos,
-  createVideo,
-  getVideoById,
-  updateVideo,
-  deleteVideo,
 };

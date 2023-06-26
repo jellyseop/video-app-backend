@@ -10,6 +10,7 @@ import {
   authenticateUser,
   authorizeUser,
 } from "../middlewares/auth-middleware";
+import { profileUpload } from "../middlewares/upload-middleware";
 
 const router = express.Router();
 
@@ -19,14 +20,9 @@ router
   .route("/:id")
   .get(getUserById)
   .all(authenticateUser, authorizeUser)
-  .put(updateUser)
+  .put(profileUpload.single("profileImage"), updateUser)
   .delete(deleteUser);
 
-router.put(
-  "/:id/change-password",
-  authenticateUser,
-  authorizeUser,
-  changePassword
-);
+router.put("/change-password", authenticateUser, changePassword);
 
 export default router;
