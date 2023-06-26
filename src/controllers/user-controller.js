@@ -1,3 +1,4 @@
+import session from "express-session";
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
 
@@ -46,6 +47,14 @@ export const createUser = async (req, res) => {
   try {
     const { email, username, password } = req.body;
 
+    // Check if email or username already exist
+    const isExist = await User.findOne({ $or: [{ email }, { username }] });
+    if (isExist) {
+      return res
+        .status(409)
+        .json({ ok: false, error: "Email or username already taken" });
+    }
+
     await User.create({ email, username, password });
     res.status(201).json({ ok: true });
   } catch (error) {
@@ -76,6 +85,16 @@ export const updateUser = async (req, res) => {
         user: { _id },
       },
     } = req;
+
+    const foundUser = await User.findOne({
+      $or: [{ email }, { username }],
+      _id: { $ne: _id },
+    });
+    if (foundUser) {
+      return res
+        .status(409)
+        .json({ message: "Email or username already taken." });
+    }
 
     // Update the user in the database
     const updatedUser = await User.findByIdAndUpdate(
