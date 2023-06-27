@@ -1,3 +1,4 @@
+import User from "../models/User.js";
 import Video from "../models/Video.js";
 
 // Create a new video
@@ -6,17 +7,20 @@ export const createVideo = async (req, res) => {
     const {
       body: { title, description, hashtags },
       file: { path },
-      session: { user },
+      session: {
+        user: { _id },
+      },
     } = req;
-    console.log("file :>> ", path);
 
     const newVideo = await Video.create({
       title,
       description,
       videoUrl: path,
       hashtags,
-      user,
+      user: _id,
     });
+
+    await User.findByIdAndUpdate(_id, { $push: { videos: newVideo._id } });
     res.status(201).json(newVideo);
   } catch (error) {
     console.log("error :>> ", error);
@@ -43,7 +47,8 @@ export const searchVideos = async (req, res) => {
 export const getVideoById = async (req, res) => {
   try {
     const { id } = req.params;
-    const video = await Video.findById(id);
+    const video = await Video.findById(id).populate("user");
+    console.log("video :>> ", video);
     if (!video) {
       return res.status(404).json({ error: "Video not found" });
     }
@@ -57,10 +62,10 @@ export const getVideoById = async (req, res) => {
 export const updateVideo = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, url } = req.body;
+    const { title, description, hashtags } = req.body;
     const updatedVideo = await Video.findByIdAndUpdate(
       id,
-      { title, description, url },
+      { title, description, hashtags },
       { new: true }
     );
     if (!updatedVideo) {

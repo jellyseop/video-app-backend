@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import { hashPassword } from "../../utils/bcrypt";
 
 const userSchema = new mongoose.Schema(
   {
@@ -17,16 +17,15 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     profileImageUrl: String,
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
+    videos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
   },
   { timestamps: true }
 );
 
 userSchema.pre("save", async function () {
-  this.password = await bcrypt.hash(this.password, 10);
+  if (this.isModified("password")) {
+    this.password = await hashPassword(this.password);
+  }
 });
 
 const User = mongoose.model("User", userSchema);

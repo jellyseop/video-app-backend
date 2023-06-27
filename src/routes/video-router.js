@@ -6,20 +6,23 @@ import {
   updateVideo,
   deleteVideo,
 } from "../controllers/video-controller.js";
-import { authenticateUser } from "../middlewares/auth-middleware.js";
+import {
+  authenticateUser,
+  authorizeVideoEdit,
+} from "../middlewares/auth-middleware.js";
 import { videoUpload } from "../middlewares/upload-middleware.js";
 
 const router = express.Router();
 
 // POST /videos
-router.post("/", videoUpload.single("video"), createVideo);
+router.post("/", authenticateUser, videoUpload.single("video"), createVideo);
 
 router.get("/search", searchVideos);
 
 router
   .route("/:id")
+  .all(authenticateUser, authorizeVideoEdit)
   .get(getVideoById)
-  .all(authenticateUser)
   .put(updateVideo)
   .delete(deleteVideo);
 
