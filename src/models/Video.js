@@ -5,9 +5,12 @@ const videoSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      maxlength: 100,
+      index: true,
     },
     description: {
       type: String,
+      maxlength: 500,
     },
     videoUrl: {
       type: String,
@@ -19,14 +22,13 @@ const videoSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
+    likes: {
+      count: { type: Number, default: 0 },
+      users: [{ type: mongoose.Schema.Types.ObjectId }],
     },
-    hashTags: [{ type: String, trim: true }],
+    hashTags: [{ type: String, trim: true, index: true }],
     meta: {
-      view: { type: Number, default: 0, required: true },
-      rating: { type: Number, default: 0, required: true },
+      view: { type: Number, default: 0 },
     },
   },
   { timestamps: true }

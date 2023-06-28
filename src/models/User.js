@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema(
     },
     profileImageUrl: String,
     videos: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
+    likedVideos: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Video",
+      },
+    ],
   },
   { timestamps: true }
 );
