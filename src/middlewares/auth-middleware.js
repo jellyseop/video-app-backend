@@ -1,4 +1,4 @@
-import Video from "../models/Video";
+import Video from "@src/database/models/Video";
 
 // Authentication middleware function
 export const authenticateUser = (req, res, next) => {

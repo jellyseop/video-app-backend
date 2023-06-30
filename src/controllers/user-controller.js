@@ -1,5 +1,5 @@
-import User from "../models/User.js";
-import bcrypt from "bcrypt";
+import { comparePassword } from "../utils/bcrypt.js";
+import User from "../database/models/User.js";
 
 // User login
 export const login = async (req, res) => {
@@ -10,7 +10,7 @@ export const login = async (req, res) => {
       return res.status(401).json({ ok: false, error: "Invalid email" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ ok: false, error: "Invalid password" });
