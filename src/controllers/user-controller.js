@@ -1,80 +1,70 @@
-import { comparePassword } from "../utils/bcrypt.js";
-import User from "../database/models/User.js";
+import userService from "@src/services/user-service";
+
+const createUser = async (req, res) => {
+  try {
+    const { email, username, password, profileImageUrl } = req.body;
+
+    const result = await userService.createUser({
+      email,
+      username,
+      password,
+      profileImageUrl,
+    });
+
+    res.status(201).json(result);
+  } catch ({ statusCode, message }) {
+    res.status(statusCode).json({ ok: false, error: message });
+  }
+};
 
 // User login
-export const login = async (req, res) => {
+const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ ok: false, error: "Invalid email" });
+
+    const result = await userService.loginUser({ email, password });
+
+    if (!result.ok) {
+      res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
-
-    const isPasswordValid = await comparePassword(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ ok: false, error: "Invalid password" });
-    }
-
-    console.log("user :>> ", user);
 
     req.session.loggedIn = true;
-    req.session.user = user;
+    req.session.user = result.user;
 
-    res.status(200).json({ message: "Login successful" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to login" });
+    res.status(200).json(result);
+  } catch ({ statusCode, message }) {
+    res.status(statusCode).json({ ok: false, error: message });
   }
 };
 
 // User logout
-export const logoutUser = (req, res) => {
-  // Destroy the session and clear the user ID
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Failed to logout" });
-    }
+const logoutUser = async (req, res) => {
+  try {
+    const { session } = req;
+    await userService.logoutUser(session);
+
     res.clearCookie("connect.sid"); // Clear the session cookie
     res.json({ message: "Logout successful" });
-  });
-};
-
-// Create a new user
-export const createUser = async (req, res) => {
-  try {
-    const { email, username, password } = req.body;
-
-    // Check if email or username already exist
-    const isExist = await User.findOne({ $or: [{ email }, { username }] });
-    if (isExist) {
-      return res
-        .status(409)
-        .json({ ok: false, error: "Email or username already taken" });
-    }
-
-    await User.create({ email, username, password });
-    res.status(201).json({ ok: true });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create user" });
+  } catch ({ statusCode, message }) {
+    res.status(statusCode).json({ ok: false, error: message });
   }
 };
 
 // Get a user by ID
-export const getUserById = async (req, res) => {
+const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+
+    const user = await userService.getUserById({ id });
+
     res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch user" });
+  } catch ({ statusCode, message }) {
+    res.status(statusCode).json({ ok: false, error: message });
   }
 };
 
 // Update a user
-export const updateUser = async (req, res) => {
+const updateUserById = async (req, res) => {
   try {
     const {
       body: { username, email },
@@ -84,88 +74,97 @@ export const updateUser = async (req, res) => {
       },
     } = req;
 
-    console.log("file :>> ", profileImageUrl);
-    const foundUser = await User.findOne({
-      $or: [{ email }, { username }],
-      _id: { $ne: _id },
-    });
-    if (foundUser) {
-      return res
-        .status(409)
-        .json({ message: "Email or username already taken." });
-    }
-
-    // Update the user in the database
-    const updatedUser = await User.findByIdAndUpdate(
+    await userService.updateUserById({
       _id,
-      { email, username, profileImageUrl: file ? file.path : profileImageUrl },
-      { new: true }
-    );
+      username,
+      email,
+      file,
+      profileImageUrl,
+    });
 
-    // If the user does not exist, return an error
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    req.session.user = updatedUser;
-    // Return the updated user as a response
-    res.status(200).json({ message: "profile updated successfully." });
-  } catch (error) {
-    // Handle any errors that occur during the update process
-    console.error("Error during user update:", error);
-    res.status(500).json({ message: "An error occurred during user update." });
-  }
-};
-
-export const changePassword = async (req, res) => {
-  try {
-    const {
-      session: {
-        user: { _id },
-      },
-      body: { newPassword },
-    } = req;
-
-    // Retrieve the user from the database
-    const user = await User.findById(_id);
-
-    // Check if the user exists
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
-    /*
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid current password." });
-    }
-    */
-
-    // Update the user's password
-    user.password = newPassword;
-    await user.save();
-
-    res.json({ message: "Password updated successfully." });
-
-    //2. update password
-  } catch (error) {
-    console.error("Error changing password:", error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while changing the password." });
+    res.status(200).json({ message: "Profile updated successfully." });
+  } catch ({ statusCode, message }) {
+    res.status(statusCode).json({ ok: false, message });
   }
 };
 
 // Delete a user
-export const deleteUser = async (req, res) => {
+const deleteUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
+
+    await userService.deleteUserById({ id });
+
     res.status(200).json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete user" });
+  } catch ({ statusCode, message }) {
+    res.status(statusCode).json({ ok: false, message });
   }
+};
+
+const getSubscribedUsers = (req, res) => {};
+const subscribeUser = (req, res) => {};
+/* const subscribeUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const loggedInUserId = req.user.id; // Assuming you have implemented user authentication and have access to the logged-in user's ID
+
+    const targetUser = await User.findById(id);
+    if (!targetUser) {
+      return res.status(404).json({ error: "Target user not found" });
+    }
+
+    const existingSubscription = await Subscription.findOne({
+      subscriber: loggedInUserId,
+      channel: targetUser._id,
+    });
+    if (existingSubscription) {
+      return res.status(400).json({ error: "Already subscribed to this user" });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    const subscription = new Subscription({
+      subscriber: loggedInUserId,
+      channel: targetUser._id,
+    });
+
+    try {
+      await subscription.save({ session });
+
+      targetUser.meta.subscribers += 1;
+      await targetUser.save({ session });
+
+      await User.findByIdAndUpdate(
+        loggedInUserId,
+        { $push: { subscribes: subscription._id } },
+        { session }
+      );
+
+      await session.commitTransaction();
+      session.endSession();
+
+      res.status(200).json({ message: "User subscribed successfully" });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
+  } catch (error) {
+    res.status(500).json({ error: "An error occurred during subscribe." });
+  }
+}; */
+
+const unsubscribeUser = (req, res) => {};
+
+export default {
+  createUser,
+  loginUser,
+  logoutUser,
+  getUserById,
+  updateUserById,
+  deleteUserById,
+  getSubscribedUsers,
+  subscribeUser,
+  unsubscribeUser,
 };

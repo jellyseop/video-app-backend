@@ -4,17 +4,19 @@ simple CRUD backend with express, mongoDB, REST, session authentication
 
 **userRoutes.js:**
 
-- [] `POST /api/users` - Create a new user (createUser)
-- [] `POST /api/users/login` - User login (login)
-- [] `POST /api/users/logout` - User logout (logout)
-- [] `GET /api/users/:id` - Get user details by ID (getUserById)
-- [] `PATCH /api/users/:id` - Update user details by ID (updateUserById)
-- [] `DELETE /api/users/:id` - Delete user by ID (deleteUserById)
-- [] `GET /api/users/:userId/videos` - Get videos created by a user (getVideosByUser)
+- [✅] `POST /api/users` - Create a new user (createUser)
 
-- [] `GET /api/users/:id/subscribe` - get subscribed users
-- [] `POST /api/users/:id/subscribe` - subscribe a user
-- [] `DELETE /api/users/:id/subscribe` - unsubscribe a user
+- [✅] `POST /api/users/login` - User login (login)
+- [✅] `POST /api/users/logout` - User logout (logout)
+
+- [✅] `GET /api/users/:id` - Get user details by ID (getUserById)
+- [✅] `PATCH /api/users/:id` - Update user details by ID (updateUserById)
+- [✅] `DELETE /api/users/:id` - Delete user by ID (deleteUserById)
+- [] `GET /api/users/:id/videos` - Get videos created by a user (getVideosByUser)
+
+- [] `GET /api/users/:id/subscription` - get subscribed users (getSubscribedUsers)
+- [🚀] `POST /api/users/:id/subscription` - subscribe a user (subscribeUser)
+- [] `DELETE /api/users/:id/subscription` - unsubscribe a user (unsubscribeUser)
 
 **videoRoutes.js:**
 
@@ -47,8 +49,5 @@ simple CRUD backend with express, mongoDB, REST, session authentication
 
 **_todo_**
 
-1. implement 'subscribe' feature.
-2. change 'comment' model.
-   -> on parent comment.
-3. handle thumbnail in Video
-4. change password endpoint
+1. handle thumbnail in Video
+2. change password endpoint

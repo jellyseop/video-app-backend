@@ -1,28 +1,34 @@
 import express from "express";
-import {
-  changePassword,
-  deleteUser,
-  getUserById,
-  logoutUser,
-  updateUser,
-} from "../controllers/user-controller";
-import {
-  authenticateUser,
-  authorizeUser,
-} from "../middlewares/auth-middleware";
-import { profileUpload } from "../middlewares/upload-middleware";
+import userController from "@src/controllers/user-controller";
+import authMiddleware from "@src/routes/middlewares/auth-middlewares";
+import uploadMiddleware from "@src/routes/middlewares/upload-middleware";
 
 const router = express.Router();
 
-router.post("/logout", logoutUser);
+router.post(
+  "/",
+  uploadMiddleware.profileUpload.single("profileImage"),
+  userController.createUser
+);
+
+router.post("/login", userController.loginUser);
+router.post("/logout", userController.logoutUser);
 
 router
   .route("/:id")
-  .get(getUserById)
-  .all(authenticateUser, authorizeUser)
-  .put(profileUpload.single("profileImage"), updateUser)
-  .delete(deleteUser);
+  .get(userController.getUserById)
+  .all(authMiddleware.authenticateUser, authMiddleware.authorizeUser)
+  .patch(
+    uploadMiddleware.profileUpload.single("profileImage"),
+    userController.updateUserById
+  )
+  .delete(userController.deleteUserById);
 
-router.put("/change-password", authenticateUser, changePassword);
+router
+  .route("/:id/subscription")
+  .all(authMiddleware.authenticateUser)
+  .get(userController.getSubscribedUsers)
+  .post(userController.subscribeUser)
+  .delete(authMiddleware.authorizeUser, userController.unsubscribeUser);
 
 export default router;
